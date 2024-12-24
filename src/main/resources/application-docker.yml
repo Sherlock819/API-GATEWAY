@@ -1,0 +1,13 @@
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_SERVER_URL:http://eureka-server:8761/eureka/}  # Docker-specific Eureka URL
+      fetch-registry: true
+      register-with-eureka: true
+  instance:
+    hostname: ${spring.application.name}
+    prefer-ip-address: false
+    healthCheckUrlPath: /actuator/health
+    statusPageUrlPath: /actuator/info
+    healthCheckUrl: http://${eureka.instance.hostname}:${eureka.instance.non-secure-port}${eureka.instance.healthCheckUrlPath}
+    statusPageUrl: http://${eureka.instance.hostname}:${eureka.instance.non-secure-port}${eureka.instance.statusPageUrlPath}

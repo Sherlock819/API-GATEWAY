@@ -1,0 +1,86 @@
+spring:
+  profiles:
+    active: local
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+    allow-bean-definition-overriding: true
+  cloud:
+    discovery:
+      enabled: true
+    loadbalancer:
+      enabled: true
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
+        - id: order
+          uri: lb://order
+          predicates:
+            - Path=/order/**
+        - id: restaurant
+          uri: lb://restaurant
+          predicates:
+            - Path=/restaurant/**
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/user/h2-console/**]':
+            allowedOrigins:
+              - "null"
+              - "http://localhost:8080"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "Origin"
+              - "Content-Type"
+              - "Accept"
+              - "Authorization"
+            allowCredentials: true
+            maxAge: 3600
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3007"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - Content-Type
+              - Authorization
+              - Accept
+              - Origin
+            allowCredentials: true
+            maxAge: 3600
+  security:
+    user:
+      name: admin
+      password: password
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.cloud.netflix.eureka: DEBUG
+    com.netflix.discovery: TRACE
+    org.springframework.cloud.netflix.eureka.EurekaAutoServiceRegistration: DEBUG
+
+JWT_SECRET: MDW6UVD0yvXOdwZBJQYgJvZ8104+5q35IU1JuTk3I38=
