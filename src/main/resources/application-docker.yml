@@ -6,7 +6,7 @@ eureka:
       register-with-eureka: true
   instance:
     hostname: ${spring.application.name}
-    prefer-ip-address: false
+    prefer-ip-address: true
     healthCheckUrlPath: /actuator/health
     statusPageUrlPath: /actuator/info
     healthCheckUrl: http://${eureka.instance.hostname}:${eureka.instance.non-secure-port}${eureka.instance.healthCheckUrlPath}

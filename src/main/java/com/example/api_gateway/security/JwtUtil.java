@@ -1,23 +1,19 @@
-package com.example.api_gateway.config;
+package com.example.api_gateway.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import com.example.api_gateway.exception.JwtTokenMalformedException;
+import com.example.api_gateway.exception.JwtTokenMissingException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component
-public class JwtTokenProvider {
+public class JwtUtil {
 
     @Value("${JWT_SECRET}")
     private String jwtSecret; // Store securely in properties
@@ -33,7 +29,7 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
-    public boolean validateToken(String token) {
+    public boolean  isValid(String token) throws JwtTokenMalformedException, JwtTokenMissingException {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(getKey())
@@ -41,23 +37,27 @@ public class JwtTokenProvider {
                     .parseSignedClaims(token)
                     .getPayload();
             return !claims.getExpiration().before(new Date()); // Check if the token is expired
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new RuntimeException("Invalid JWT token");
+        } catch (SignatureException ex) {
+            throw new JwtTokenMalformedException("Invalid JWT signature");
+        } catch (MalformedJwtException ex) {
+            throw new JwtTokenMalformedException("Invalid JWT token");
+        } catch (ExpiredJwtException ex) {
+            throw new JwtTokenMalformedException("Expired JWT token");
+        } catch (UnsupportedJwtException ex) {
+            throw new JwtTokenMalformedException("Unsupported JWT token");
+        } catch (IllegalArgumentException ex) {
+            throw new JwtTokenMissingException("JWT claims string is empty.");
+        } catch (JwtException e) {
+            throw new RuntimeException("Something wrong with JWT token");
         }
     }
 
-    public List<GrantedAuthority> getAuthoritiesFromToken(String token) {
-        Claims claims = Jwts.parser()
+    public Claims getAllClaimsFromToken(String token) {
+        return Jwts.parser()
                 .verifyWith(getKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-
-        // Assuming roles are stored in the "role" claim
-        String roles = claims.get("role", String.class);
-        return Stream.of(roles.split(","))
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
     }
 
     private SecretKey getKey() {

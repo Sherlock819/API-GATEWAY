@@ -17,18 +17,20 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        - id: user-service
+        - id: User-Service
           uri: lb://user-service
           predicates:
             - Path=/user/**
-        - id: order
+          filters:
+            - AuthFilter
+            - StripPrefix=1
+        - id: Order
           uri: lb://order
           predicates:
             - Path=/order/**
-        - id: restaurant
-          uri: lb://restaurant
-          predicates:
-            - Path=/restaurant/**
+          filters:
+            - AuthFilter
+            - StripPrefix=1
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
       globalcors:
@@ -74,6 +76,13 @@ spring:
 
 server:
   port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
 
 logging:
   level:
